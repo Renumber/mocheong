@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-serif: 'Noto Serif KR', serif;
+  --font-sans: 'Noto Sans KR', sans-serif;
+  --color-ivory: #fdfbf7;
+  --color-blush: #c9a96a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #efece6;
+  color: #3f3a36;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 스크롤 페이드인 */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out;
+}
+
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
