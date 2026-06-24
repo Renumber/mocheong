@@ -6,6 +6,7 @@ import GallerySection from './components/GallerySection.vue'
 import LocationSection from './components/LocationSection.vue'
 import AccountSection from './components/AccountSection.vue'
 import ContactSection from './components/ContactSection.vue'
+import SeatSideSection from './components/SeatSideSection.vue'
 import ShareSection from './components/ShareSection.vue'
 import { wedding } from './config/wedding'
 </script>
@@ -20,6 +21,7 @@ import { wedding } from './config/wedding'
       <LocationSection v-reveal />
       <AccountSection v-reveal />
       <ContactSection v-reveal />
+      <SeatSideSection v-reveal />
       <ShareSection v-reveal />
     </main>
     <footer class="py-10 text-center text-xs text-stone-400">
