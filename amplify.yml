@@ -3,12 +3,13 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - corepack enable
+        - pnpm install --frozen-lockfile
     build:
       commands:
         # Amplify 콘솔 환경변수(VITE_*)를 빌드 시 .env로 내려받아 Vite가 읽도록 함
         - env | grep -e '^VITE_' > .env.production || true
-        - npm run build
+        - pnpm run build
   artifacts:
     baseDirectory: dist
     files:
