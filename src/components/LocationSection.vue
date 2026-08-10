@@ -5,6 +5,8 @@ import { loadKakaoMap } from '../composables/useKakao'
 
 const mapEl = ref<HTMLElement | null>(null)
 const mapError = ref(false)
+const mapInteractive = ref(false)
+let mapInstance: any = null
 
 const { name, address, lat, lng } = {
   name: wedding.venue.name,
@@ -24,13 +26,28 @@ const navLinks = [
   },
 ]
 
+function enableMapInteraction() {
+  if (!mapInstance || mapInteractive.value) return
+  mapInstance.setDraggable(true)
+  mapInstance.setZoomable(true)
+  mapInteractive.value = true
+}
+
 onMounted(async () => {
   try {
     await loadKakaoMap()
     if (!mapEl.value) return
     const kakao = window.kakao
     const center = new kakao.maps.LatLng(lat, lng)
-    const map = new kakao.maps.Map(mapEl.value, { center, level: 3 })
+    const map = new kakao.maps.Map(mapEl.value, {
+      center,
+      level: 3,
+      draggable: false,
+      scrollwheel: false,
+      disableDoubleClickZoom: true,
+    })
+    map.setZoomable(false)
+    mapInstance = map
     new kakao.maps.Marker({ map, position: center })
     new kakao.maps.CustomOverlay({
       map,
@@ -57,8 +74,8 @@ onMounted(async () => {
       </a>
     </div>
 
-    <!-- 지도 -->
-    <div class="mt-6 overflow-hidden rounded-xl ring-1 ring-stone-200">
+    <!-- 지도: 기본은 스크롤 통과, 탭 후 조작 -->
+    <div class="relative mt-6 overflow-hidden rounded-xl ring-1 ring-stone-200">
       <div v-if="!mapError" ref="mapEl" class="h-64 w-full" />
       <a
         v-else
@@ -70,6 +87,14 @@ onMounted(async () => {
         <span>지도를 불러오지 못했습니다.</span>
         <span class="text-blush underline">카카오맵에서 위치 보기</span>
       </a>
+      <button
+        v-if="!mapError && !mapInteractive"
+        type="button"
+        class="absolute inset-0 z-10 flex items-center justify-center bg-black/20 text-sm font-medium text-white"
+        @click="enableMapInteraction"
+      >
+        <span class="rounded-full bg-black/55 px-4 py-2 backdrop-blur-sm">지도 터치하여 이동</span>
+      </button>
     </div>
 
     <!-- 지도 앱 버튼 -->
