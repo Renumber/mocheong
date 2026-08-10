@@ -46,9 +46,7 @@ export function useKakaoShare() {
   function shareToKakao() {
     if (!window.Kakao?.isInitialized()) return
     window.Kakao.Share.sendDefault({
-      objectType: 'location',
-      address: wedding.venue.address,
-      addressTitle: wedding.venue.name,
+      objectType: 'feed',
       content: {
         title: wedding.ogTitle,
         description: wedding.ogDescription,
