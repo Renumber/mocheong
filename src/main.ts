@@ -1,6 +1,9 @@
 import { createApp, type Directive } from 'vue'
 import './style.css'
 import App from './App.vue'
+import { printConsoleEasterEgg } from './easterEgg'
+
+printConsoleEasterEgg()
 
 /** v-reveal: 뷰포트 진입 시 페이드인 */
 const reveal: Directive<HTMLElement> = {
