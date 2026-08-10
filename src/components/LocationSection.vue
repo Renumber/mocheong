@@ -16,15 +16,11 @@ const { name, address, lat, lng } = {
 const navLinks = [
   {
     label: '카카오맵',
-    href: `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`,
+    href: `https://map.kakao.com/link/map/${encodeURIComponent(name)},${lat},${lng}`,
   },
   {
     label: '네이버지도',
     href: `https://map.naver.com/p/search/${encodeURIComponent(address)}`,
-  },
-  {
-    label: '티맵',
-    href: `tmap://route?goalname=${encodeURIComponent(name)}&goalx=${lng}&goaly=${lat}`,
   },
 ]
 
@@ -76,8 +72,8 @@ onMounted(async () => {
       </a>
     </div>
 
-    <!-- 길찾기 버튼 -->
-    <div class="mt-4 grid grid-cols-3 gap-2">
+    <!-- 지도 앱 버튼 -->
+    <div class="mt-4 grid grid-cols-2 gap-2">
       <a
         v-for="link in navLinks"
         :key="link.label"
