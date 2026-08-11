@@ -126,5 +126,12 @@ onMounted(async () => {
         <p class="mt-1 text-sm leading-6 text-stone-500">{{ wedding.transport.parking }}</p>
       </div>
     </div>
+
+    <!-- 화환 안내 -->
+    <div class="mt-6 rounded-xl bg-gray-100 px-5 py-4 text-sm leading-6 text-stone-600">
+      보다 쾌적하고 안전한 예식 진행을 위해<br />
+      축하화환은 정중히 받지 않고 있습니다.<br />
+      너른 이해 부탁드립니다.
+    </div>
   </section>
 </template>

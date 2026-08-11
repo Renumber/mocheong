@@ -24,11 +24,11 @@ const dateText = computed(() => {
       </h1>
     </div>
 
-    <div class="relative mx-8 aspect-[3/4] overflow-hidden rounded-t-full">
+    <div class="mx-8 overflow-hidden rounded-t-full">
       <img
         :src="wedding.mainImage"
         alt="메인 웨딩 사진"
-        class="absolute inset-0 h-full w-full object-cover"
+        class="block h-auto w-full"
       />
     </div>
 
