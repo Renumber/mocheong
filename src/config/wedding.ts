@@ -12,21 +12,25 @@ function parseAccount(raw: string | undefined, label: string): Account | null {
   return { bank, number, holder, label }
 }
 
+function envText(value: string | undefined): string {
+  return (value ?? '').replace(/\\n/g, '\n')
+}
+
 const env = import.meta.env
 
 export const wedding = {
   siteUrl: env.VITE_SITE_URL as string,
-  ogTitle: env.VITE_OG_TITLE as string,
-  ogDescription: env.VITE_OG_DESCRIPTION as string,
+  ogTitle: envText(env.VITE_OG_TITLE as string),
+  ogDescription: envText(env.VITE_OG_DESCRIPTION as string),
   ogImage: env.VITE_OG_IMAGE as string,
   kakaoJsKey: env.VITE_KAKAO_JS_KEY as string,
 
   date: new Date(env.VITE_WEDDING_DATE as string),
 
   venue: {
-    name: env.VITE_VENUE_NAME as string,
-    hall: env.VITE_VENUE_HALL as string,
-    address: env.VITE_VENUE_ADDRESS as string,
+    name: envText(env.VITE_VENUE_NAME as string),
+    hall: envText(env.VITE_VENUE_HALL as string),
+    address: envText(env.VITE_VENUE_ADDRESS as string),
     tel: env.VITE_VENUE_TEL as string,
     lat: Number(env.VITE_VENUE_LAT),
     lng: Number(env.VITE_VENUE_LNG),
@@ -48,7 +52,7 @@ export const wedding = {
     mother: { name: env.VITE_BRIDE_MOTHER as string, phone: env.VITE_BRIDE_MOTHER_PHONE as string },
   },
 
-  greeting: ((env.VITE_GREETING_MESSAGE as string) ?? '').replace(/\\n/g, '\n'),
+  greeting: envText(env.VITE_GREETING_MESSAGE as string),
 
   accounts: {
     groom: [
@@ -64,9 +68,9 @@ export const wedding = {
   },
 
   transport: {
-    subway: env.VITE_TRANSPORT_SUBWAY as string,
-    bus: env.VITE_TRANSPORT_BUS as string,
-    parking: env.VITE_TRANSPORT_PARKING as string,
+    subway: envText(env.VITE_TRANSPORT_SUBWAY as string),
+    bus: envText(env.VITE_TRANSPORT_BUS as string),
+    parking: envText(env.VITE_TRANSPORT_PARKING as string),
   },
 
   mainImage: env.VITE_MAIN_IMAGE as string,

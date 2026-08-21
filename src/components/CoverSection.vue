@@ -34,7 +34,7 @@ const dateText = computed(() => {
 
     <div class="px-8 py-8 text-center">
       <p class="font-serif text-base text-stone-700">{{ dateText }}</p>
-      <p class="mt-2 text-sm text-stone-500">{{ wedding.venue.name }} {{ wedding.venue.hall }}</p>
+      <p class="mt-2 whitespace-pre-line text-sm text-stone-500">{{ wedding.venue.name }} {{ wedding.venue.hall }}</p>
     </div>
   </section>
 </template>

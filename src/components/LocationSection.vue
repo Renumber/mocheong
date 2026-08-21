@@ -67,8 +67,8 @@ onMounted(async () => {
     <h2 class="mt-3 font-serif text-xl text-stone-800">오시는 길</h2>
 
     <div class="mt-6 text-[15px] text-stone-700">
-      <p class="font-medium">{{ wedding.venue.name }} {{ wedding.venue.hall }}</p>
-      <p class="mt-1 text-sm text-stone-500">{{ wedding.venue.address }}</p>
+      <p class="whitespace-pre-line font-medium">{{ wedding.venue.name }} {{ wedding.venue.hall }}</p>
+      <p class="mt-1 whitespace-pre-line text-sm text-stone-500">{{ wedding.venue.address }}</p>
       <a :href="`tel:${wedding.venue.tel}`" class="mt-1 inline-block text-sm text-blush underline">
         {{ wedding.venue.tel }}
       </a>
@@ -115,15 +115,15 @@ onMounted(async () => {
     <div class="mt-8 space-y-4 rounded-xl bg-white p-5 text-left shadow-sm ring-1 ring-stone-200/70">
       <div>
         <p class="text-sm font-semibold text-stone-700">지하철</p>
-        <p class="mt-1 text-sm leading-6 text-stone-500">{{ wedding.transport.subway }}</p>
+        <p class="mt-1 whitespace-pre-line text-sm leading-6 text-stone-500">{{ wedding.transport.subway }}</p>
       </div>
       <div>
         <p class="text-sm font-semibold text-stone-700">버스</p>
-        <p class="mt-1 text-sm leading-6 text-stone-500">{{ wedding.transport.bus }}</p>
+        <p class="mt-1 whitespace-pre-line text-sm leading-6 text-stone-500">{{ wedding.transport.bus }}</p>
       </div>
       <div>
         <p class="text-sm font-semibold text-stone-700">주차</p>
-        <p class="mt-1 text-sm leading-6 text-stone-500">{{ wedding.transport.parking }}</p>
+        <p class="mt-1 whitespace-pre-line text-sm leading-6 text-stone-500">{{ wedding.transport.parking }}</p>
       </div>
     </div>
 
