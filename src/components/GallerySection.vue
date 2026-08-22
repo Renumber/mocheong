@@ -68,7 +68,7 @@ function onTouchEnd(e: TouchEvent) {
             ×
           </button>
         </div>
-        <div class="relative flex flex-1 items-center justify-center px-2 pb-8">
+        <div class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-2 pb-8">
           <button
             type="button"
             class="absolute left-1 z-10 p-3 text-3xl text-white/70"
@@ -80,7 +80,7 @@ function onTouchEnd(e: TouchEvent) {
           <img
             :src="images[viewerIndex]"
             :alt="`갤러리 사진 ${viewerIndex + 1}`"
-            class="max-h-full max-w-full rounded-lg object-contain"
+            class="h-full w-auto max-w-full rounded-lg object-contain"
           />
           <button
             type="button"
