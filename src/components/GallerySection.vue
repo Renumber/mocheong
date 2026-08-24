@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { wedding } from '../config/wedding'
 
-const PREVIEW_COUNT = 9
 const images = wedding.galleryImages
-const previewImages = computed(() => images.slice(0, PREVIEW_COUNT))
-const remaining = computed(() => Math.max(0, images.length - PREVIEW_COUNT))
 
 const viewerIndex = ref<number | null>(null)
+const slideIndex = ref(0)
+const sliderEl = ref<HTMLElement | null>(null)
 const stripEl = ref<HTMLElement | null>(null)
 
 function open(i: number) {
@@ -32,8 +31,45 @@ function onKeydown(e: KeyboardEvent) {
   else if (e.key === 'ArrowRight') move(1)
 }
 
-function isMoreCell(i: number) {
-  return remaining.value > 0 && i === previewImages.value.length - 1
+function updateSlideIndex() {
+  const el = sliderEl.value
+  if (!el) return
+  const center = el.scrollLeft + el.clientWidth / 2
+  let best = 0
+  let bestDist = Infinity
+  for (let i = 0; i < el.children.length; i++) {
+    const child = el.children[i] as HTMLElement
+    const mid = child.offsetLeft + child.offsetWidth / 2
+    const dist = Math.abs(mid - center)
+    if (dist < bestDist) {
+      bestDist = dist
+      best = i
+    }
+  }
+  slideIndex.value = best
+}
+
+let sliderRaf = 0
+function onSliderScroll() {
+  if (sliderRaf) return
+  sliderRaf = requestAnimationFrame(() => {
+    sliderRaf = 0
+    updateSlideIndex()
+  })
+}
+
+let pointerStartX = 0
+let sliderDragged = false
+function onSliderPointerDown(e: PointerEvent) {
+  pointerStartX = e.clientX
+  sliderDragged = false
+}
+function onSliderPointerMove(e: PointerEvent) {
+  if (Math.abs(e.clientX - pointerStartX) > 8) sliderDragged = true
+}
+function onSlideClick(i: number) {
+  if (sliderDragged) return
+  open(i)
 }
 
 let touchStartX = 0
@@ -59,46 +95,42 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown)
   document.body.style.overflow = ''
+  if (sliderRaf) cancelAnimationFrame(sliderRaf)
 })
 </script>
 
 <template>
-  <section class="px-6 py-16 text-center">
-    <p class="font-serif text-xs tracking-[0.35em] text-blush uppercase">Gallery</p>
-    <h2 class="mt-3 font-serif text-xl text-stone-800">우리의 순간들</h2>
+  <section class="py-16 text-center">
+    <p class="px-6 font-serif text-xs tracking-[0.35em] text-blush uppercase">Gallery</p>
+    <h2 class="mt-3 px-6 font-serif text-xl text-stone-800">우리의 순간들</h2>
 
-    <div class="mt-8 grid grid-cols-3 gap-2">
+    <div
+      ref="sliderEl"
+      class="mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 scrollbar-none"
+      style="touch-action: pan-x"
+      @scroll.passive="onSliderScroll"
+      @pointerdown="onSliderPointerDown"
+      @pointermove="onSliderPointerMove"
+    >
       <button
-        v-for="(src, i) in previewImages"
+        v-for="(src, i) in images"
         :key="`${src}-${i}`"
         type="button"
-        class="relative aspect-[4/5] overflow-hidden rounded-lg"
-        :aria-label="isMoreCell(i) ? `나머지 ${remaining}장 포함 갤러리 보기` : `갤러리 사진 ${i + 1}`"
-        @click="open(i)"
+        class="aspect-4/5 w-[78%] shrink-0 snap-center overflow-hidden rounded-lg"
+        :aria-label="`갤러리 사진 ${i + 1}`"
+        @click="onSlideClick(i)"
       >
         <img
           :src="src"
           :alt="`갤러리 사진 ${i + 1}`"
-          loading="lazy"
-          class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+          :loading="i < 2 ? 'eager' : 'lazy'"
+          class="h-full w-full object-cover"
         />
-        <span
-          v-if="isMoreCell(i)"
-          class="absolute inset-0 flex items-center justify-center bg-black/50 font-serif text-lg text-white"
-        >
-          +{{ remaining }}
-        </span>
       </button>
     </div>
-
-    <button
-      v-if="remaining > 0"
-      type="button"
-      class="mt-6 w-full rounded-xl bg-white py-4 text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-200 transition-colors hover:bg-gray-100"
-      @click="open(0)"
-    >
-      전체 사진 보기 ({{ images.length }})
-    </button>
+    <p v-if="images.length" class="mt-4 text-sm tabular-nums text-stone-500">
+      {{ slideIndex + 1 }} / {{ images.length }}
+    </p>
 
     <Teleport to="body">
       <div
