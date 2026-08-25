@@ -1,8 +1,16 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { wedding } from '../config/wedding'
 
 const images = wedding.galleryImages
+const PAGE_SIZE = 9
+const pages = computed(() => {
+  const chunks: { src: string; i: number }[][] = []
+  for (let i = 0; i < images.length; i += PAGE_SIZE) {
+    chunks.push(images.slice(i, i + PAGE_SIZE).map((src, j) => ({ src, i: i + j })))
+  }
+  return chunks
+})
 
 const viewerIndex = ref<number | null>(null)
 const slideIndex = ref(0)
@@ -59,17 +67,66 @@ function onSliderScroll() {
 }
 
 let pointerStartX = 0
+let pointerStartScroll = 0
 let sliderDragged = false
+let mouseDragging = false
+let wheelLock = false
+
 function onSliderPointerDown(e: PointerEvent) {
   pointerStartX = e.clientX
   sliderDragged = false
+  if (e.pointerType === 'touch' || e.button !== 0) return
+  const el = sliderEl.value
+  if (!el || pages.value.length < 2) return
+  mouseDragging = true
+  pointerStartScroll = el.scrollLeft
+  el.style.scrollSnapType = 'none'
+  el.setPointerCapture(e.pointerId)
 }
+
 function onSliderPointerMove(e: PointerEvent) {
-  if (Math.abs(e.clientX - pointerStartX) > 8) sliderDragged = true
+  const dx = e.clientX - pointerStartX
+  if (Math.abs(dx) > 8) sliderDragged = true
+  if (!mouseDragging) return
+  const el = sliderEl.value
+  if (!el) return
+  el.scrollLeft = pointerStartScroll - dx
 }
+
+function onSliderPointerUp() {
+  if (!mouseDragging) return
+  mouseDragging = false
+  const el = sliderEl.value
+  if (el) el.style.scrollSnapType = ''
+  updateSlideIndex()
+  scrollToPage(slideIndex.value)
+}
+
 function onSlideClick(i: number) {
   if (sliderDragged) return
   open(i)
+}
+
+function scrollToPage(i: number) {
+  const max = pages.value.length - 1
+  const next = Math.max(0, Math.min(max, i))
+  const child = sliderEl.value?.children[next] as HTMLElement | undefined
+  child?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+}
+
+function onSliderWheel(e: WheelEvent) {
+  if (pages.value.length < 2) return
+  const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+  if (delta === 0) return
+  const next = slideIndex.value + (delta > 0 ? 1 : -1)
+  if (next < 0 || next >= pages.value.length) return
+  e.preventDefault()
+  if (wheelLock) return
+  wheelLock = true
+  scrollToPage(next)
+  window.setTimeout(() => {
+    wheelLock = false
+  }, 420)
 }
 
 let touchStartX = 0
@@ -90,10 +147,12 @@ watch(viewerIndex, async (i) => {
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
+  sliderEl.value?.addEventListener('wheel', onSliderWheel, { passive: false })
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown)
+  sliderEl.value?.removeEventListener('wheel', onSliderWheel)
   document.body.style.overflow = ''
   if (sliderRaf) cancelAnimationFrame(sliderRaf)
 })
@@ -104,33 +163,65 @@ onUnmounted(() => {
     <p class="px-6 font-serif text-xs tracking-[0.35em] text-blush uppercase">Gallery</p>
     <h2 class="mt-3 px-6 font-serif text-xl text-stone-800">우리의 순간들</h2>
 
+    <p
+      v-if="!images.length"
+      class="mx-6 mt-8 rounded-lg bg-gray-100 py-16 font-serif text-sm text-stone-500"
+    >
+      사진은 준비중입니다.
+    </p>
     <div
+      v-else
       ref="sliderEl"
-      class="mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 scrollbar-none"
+      class="mt-8 flex snap-x snap-mandatory overflow-x-auto scrollbar-none select-none"
+      :class="pages.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''"
       style="touch-action: pan-x"
       @scroll.passive="onSliderScroll"
       @pointerdown="onSliderPointerDown"
       @pointermove="onSliderPointerMove"
+      @pointerup="onSliderPointerUp"
+      @pointercancel="onSliderPointerUp"
+    >
+      <div
+        v-for="(page, p) in pages"
+        :key="p"
+        class="grid w-full min-w-full shrink-0 snap-center grid-cols-3 gap-1.5 px-6"
+      >
+        <button
+          v-for="item in page"
+          :key="`${item.src}-${item.i}`"
+          type="button"
+          class="aspect-square overflow-hidden rounded-md"
+          :aria-label="`갤러리 사진 ${item.i + 1}`"
+          @click="onSlideClick(item.i)"
+        >
+          <img
+            :src="item.src"
+            :alt="`갤러리 사진 ${item.i + 1}`"
+            :loading="item.i < PAGE_SIZE ? 'eager' : 'lazy'"
+            class="pointer-events-none h-full w-full object-cover"
+            draggable="false"
+          />
+        </button>
+      </div>
+    </div>
+    <div
+      v-if="pages.length > 1"
+      class="mt-4 flex items-center justify-center gap-1.5"
+      role="tablist"
+      aria-label="갤러리 페이지"
     >
       <button
-        v-for="(src, i) in images"
-        :key="`${src}-${i}`"
+        v-for="(_, p) in pages"
+        :key="p"
         type="button"
-        class="aspect-4/5 w-[78%] shrink-0 snap-center overflow-hidden rounded-lg"
-        :aria-label="`갤러리 사진 ${i + 1}`"
-        @click="onSlideClick(i)"
-      >
-        <img
-          :src="src"
-          :alt="`갤러리 사진 ${i + 1}`"
-          :loading="i < 2 ? 'eager' : 'lazy'"
-          class="h-full w-full object-cover"
-        />
-      </button>
+        role="tab"
+        class="h-1.5 rounded-full transition-all"
+        :class="slideIndex === p ? 'w-4 bg-blush' : 'w-1.5 bg-stone-300'"
+        :aria-label="`갤러리 ${p + 1}페이지`"
+        :aria-selected="slideIndex === p"
+        @click="scrollToPage(p)"
+      />
     </div>
-    <p v-if="images.length" class="mt-4 text-sm tabular-nums text-stone-500">
-      {{ slideIndex + 1 }} / {{ images.length }}
-    </p>
 
     <Teleport to="body">
       <div
