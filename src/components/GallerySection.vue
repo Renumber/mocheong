@@ -71,6 +71,8 @@ let pointerStartScroll = 0
 let sliderDragged = false
 let mouseDragging = false
 let wheelLock = false
+let touchStartX = 0
+let touchStartY = 0
 
 function onSliderPointerDown(e: PointerEvent) {
   pointerStartX = e.clientX
@@ -85,6 +87,7 @@ function onSliderPointerDown(e: PointerEvent) {
 }
 
 function onSliderPointerMove(e: PointerEvent) {
+  if (e.pointerType === 'touch') return
   const dx = e.clientX - pointerStartX
   if (Math.abs(dx) > 8) sliderDragged = true
   if (!mouseDragging) return
@@ -100,6 +103,21 @@ function onSliderPointerUp() {
   if (el) el.style.scrollSnapType = ''
   updateSlideIndex()
   scrollToPage(slideIndex.value)
+}
+
+function onSliderTouchStart(e: TouchEvent) {
+  touchStartX = e.touches[0].clientX
+  touchStartY = e.touches[0].clientY
+  sliderDragged = false
+}
+
+function onSliderTouchEnd(e: TouchEvent) {
+  const dx = e.changedTouches[0].clientX - touchStartX
+  const dy = e.changedTouches[0].clientY - touchStartY
+  if (Math.abs(dx) < 40 || Math.abs(dx) <= Math.abs(dy)) return
+  sliderDragged = true
+  if (pages.value.length < 2) return
+  scrollToPage(slideIndex.value + (dx < 0 ? 1 : -1))
 }
 
 function onSlideClick(i: number) {
@@ -129,12 +147,12 @@ function onSliderWheel(e: WheelEvent) {
   }, 420)
 }
 
-let touchStartX = 0
+let viewerTouchStartX = 0
 function onTouchStart(e: TouchEvent) {
-  touchStartX = e.touches[0].clientX
+  viewerTouchStartX = e.touches[0].clientX
 }
 function onTouchEnd(e: TouchEvent) {
-  const dx = e.changedTouches[0].clientX - touchStartX
+  const dx = e.changedTouches[0].clientX - viewerTouchStartX
   if (Math.abs(dx) > 40) move(dx < 0 ? 1 : -1)
 }
 
@@ -172,27 +190,30 @@ onUnmounted(() => {
     <div
       v-else
       ref="sliderEl"
-      class="mt-8 flex snap-x snap-mandatory overflow-x-auto scrollbar-none select-none"
+      class="mt-8 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden scrollbar-none select-none touch-pan-y"
       :class="pages.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''"
-      style="touch-action: pan-x"
       @scroll.passive="onSliderScroll"
       @pointerdown="onSliderPointerDown"
       @pointermove="onSliderPointerMove"
       @pointerup="onSliderPointerUp"
       @pointercancel="onSliderPointerUp"
+      @touchstart.passive="onSliderTouchStart"
+      @touchend.passive="onSliderTouchEnd"
     >
       <div
         v-for="(page, p) in pages"
         :key="p"
         class="grid w-full min-w-full shrink-0 snap-center grid-cols-3 gap-1.5 px-6"
       >
-        <button
+        <div
           v-for="item in page"
           :key="`${item.src}-${item.i}`"
-          type="button"
-          class="aspect-square overflow-hidden rounded-md"
+          role="button"
+          tabindex="0"
+          class="aspect-square touch-pan-y overflow-hidden rounded-md"
           :aria-label="`갤러리 사진 ${item.i + 1}`"
           @click="onSlideClick(item.i)"
+          @keydown.enter.prevent="onSlideClick(item.i)"
         >
           <img
             :src="item.src"
@@ -201,7 +222,7 @@ onUnmounted(() => {
             class="pointer-events-none h-full w-full object-cover"
             draggable="false"
           />
-        </button>
+        </div>
       </div>
     </div>
     <div
