@@ -181,12 +181,19 @@ onUnmounted(() => {
     <p class="px-6 font-serif text-xs tracking-[0.35em] text-blush uppercase">Gallery</p>
     <h2 class="mt-3 px-6 font-serif text-xl text-stone-800">우리의 순간들</h2>
 
-    <p
+    <div
       v-if="!images.length"
-      class="mx-6 mt-8 rounded-lg bg-gray-100 py-16 font-serif text-sm text-stone-500"
+      class="mx-6 mt-8 rounded-lg bg-gray-100 px-6 py-10"
     >
-      사진은 준비중입니다.
-    </p>
+      <img
+        src="/gallery-empty.png"
+        alt=""
+        class="mx-auto h-36 w-auto object-contain"
+      />
+      <p class="mt-4 font-serif text-sm text-stone-500">
+        소중한 순간이 담긴 사진을 준비 중입니다.
+      </p>
+    </div>
     <div
       v-else
       ref="sliderEl"
