@@ -75,7 +75,7 @@ function reset() {
         class="flex flex-col items-center justify-center px-6 py-10"
         :class="spinning ? 'animate-pulse' : ''"
       >
-        <div class="flex h-16 items-center justify-center">
+        <div class="flex h-24 items-center justify-center">
           <p
             v-if="currentDisplay"
             class="font-serif text-3xl text-stone-800 transition-transform duration-300"
@@ -83,15 +83,13 @@ function reset() {
           >
             {{ currentDisplay.label }}
           </p>
-          <div
+          <img
             v-else
-            class="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100"
-          >
-            <svg viewBox="0 0 24 24" class="h-8 w-8 text-blush" fill="none" aria-hidden="true">
-              <circle cx="8" cy="12" r="5" stroke="currentColor" stroke-width="1.5" />
-              <circle cx="16" cy="12" r="5" stroke="currentColor" stroke-width="1.5" />
-            </svg>
-          </div>
+            src="/seat-stitch.png"
+            alt=""
+            class="h-[4.2rem] w-auto object-contain"
+            draggable="false"
+          />
         </div>
         <p class="mt-4 min-h-5 text-sm" :class="currentDisplay ? 'text-blush' : 'text-stone-500'">
           {{

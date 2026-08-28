@@ -12,6 +12,17 @@ const pages = computed(() => {
   return chunks
 })
 
+function emptyFillStartRow(count: number) {
+  return Math.ceil(count / 3) + 1
+}
+
+function emptyFillStyle(count: number) {
+  return {
+    gridColumn: '1 / -1',
+    gridRow: `${emptyFillStartRow(count)} / -1`,
+  }
+}
+
 const viewerIndex = ref<number | null>(null)
 const slideIndex = ref(0)
 const sliderEl = ref<HTMLElement | null>(null)
@@ -210,25 +221,40 @@ onUnmounted(() => {
       <div
         v-for="(page, p) in pages"
         :key="p"
-        class="grid w-full min-w-full shrink-0 snap-center grid-cols-3 gap-1.5 px-6"
+        class="w-full min-w-full shrink-0 snap-center px-6"
       >
-        <div
-          v-for="item in page"
-          :key="`${item.src}-${item.i}`"
-          role="button"
-          tabindex="0"
-          class="aspect-square touch-pan-y overflow-hidden rounded-md"
-          :aria-label="`갤러리 사진 ${item.i + 1}`"
-          @click="onSlideClick(item.i)"
-          @keydown.enter.prevent="onSlideClick(item.i)"
-        >
-          <img
-            :src="item.src"
-            :alt="`갤러리 사진 ${item.i + 1}`"
-            :loading="item.i < PAGE_SIZE ? 'eager' : 'lazy'"
-            class="pointer-events-none h-full w-full object-cover"
-            draggable="false"
-          />
+        <div class="grid aspect-square w-full grid-cols-3 grid-rows-3 gap-1.5">
+          <div
+            v-for="item in page"
+            :key="`${item.src}-${item.i}`"
+            role="button"
+            tabindex="0"
+            class="min-h-0 min-w-0 touch-pan-y overflow-hidden rounded-md"
+            :aria-label="`갤러리 사진 ${item.i + 1}`"
+            @click="onSlideClick(item.i)"
+            @keydown.enter.prevent="onSlideClick(item.i)"
+          >
+            <img
+              :src="item.src"
+              :alt="`갤러리 사진 ${item.i + 1}`"
+              :loading="item.i < PAGE_SIZE ? 'eager' : 'lazy'"
+              class="pointer-events-none h-full w-full object-cover"
+              draggable="false"
+            />
+          </div>
+          <div
+            v-if="emptyFillStartRow(page.length) <= 3"
+            class="pointer-events-none min-h-0 min-w-0 overflow-hidden rounded-md"
+            :style="emptyFillStyle(page.length)"
+            aria-hidden="true"
+          >
+            <img
+              src="/gallery-fill.png?v=2"
+              alt=""
+              class="h-full w-full origin-center scale-50 object-contain opacity-80"
+              draggable="false"
+            />
+          </div>
         </div>
       </div>
     </div>
