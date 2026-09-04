@@ -52,16 +52,20 @@ cp .env.example .env
 
 ## AWS Amplify 배포 (Gen 2 fullstack)
 
-호스팅만 있는 기존 앱이면, 콘솔에서 **Gen 2 백엔드**를 이 저장소의 `amplify/`에 연결해야 `amplify.yml` 백엔드 단계가 통과합니다. 연결 전에 배포하면 `ampx pipeline-deploy`가 실패합니다.
+새 Amplify 앱을 만들 필요는 없습니다. 호스팅만 쓰던 **기존 앱에 브랜치를 추가**하면 됩니다. `amplify.yml`이 그 브랜치에서 백엔드(`ampx pipeline-deploy`)를 먼저 돌리고, 이어서 프론트를 빌드합니다. `main`은 머지 전까지 그대로입니다.
 
-1. 이 저장소를 GitHub에 push
-2. [Amplify 콘솔](https://console.aws.amazon.com/amplify) > **새 앱** > GitHub 저장소 연결 (Gen 2 fullstack)
-3. 빌드 설정은 저장소의 `amplify.yml`이 적용됨 (백엔드 배포 후 프론트 빌드)
-4. **환경 변수**에 `.env`의 모든 `VITE_*` 변수를 등록
-   - `.env`는 git에 없으므로, Amplify 콘솔 환경변수가 빌드 시 주입됩니다 (`amplify.yml` 참고)
+1. GitHub에 push한 뒤, 기존 Amplify 앱에서 이 브랜치를 연결
+2. **환경 변수**의 `VITE_*`는 기존 앱 값을 그대로 씁니다. 브랜치 전용이 아니면 다시 넣을 필요 없습니다
+3. **호스팅 > 비밀(암호 관리)** 에 `ADMIN_PASSWORD`를 등록하고 저장합니다. 환경 변수가 아닙니다
+   - 가능하면 브랜치를 `모든 브랜치`만이 아니라 이 브랜치 이름으로도 넣습니다
+4. 이 계정에서 Amplify Gen 2 백엔드를 **처음** 배포하는 경우, 서울 리전 CDK 부트스트랩과 Amplify 서비스 역할 권한이 필요합니다
+   ```bash
+   npx cdk bootstrap aws://<계정ID>/ap-northeast-2
+   ```
+   Amplify 앱의 서비스 역할에 `AdministratorAccess-Amplify`가 있고, CodeBuild 역할이 `ssm:GetParameter`로 `/cdk-bootstrap/*`를 읽을 수 있어야 합니다. 이 권한이 없으면 시크릿을 넣어도 백엔드 단계에서 `BootstrapDetectionError`로 실패합니다.
 5. 배포 완료 후:
-   - `VITE_SITE_URL`을 실제 Amplify 도메인으로 수정 후 재배포
-   - 카카오 개발자 콘솔 플랫폼에 Amplify 도메인 등록
+   - 브랜치 URL을 카카오 개발자 콘솔 Web 플랫폼에 추가
+   - `VITE_SITE_URL`은 프로덕션 도메인을 쓸지, 브랜치 URL을 쓸지 선택
 
 ### 관리자 비밀번호
 
@@ -75,17 +79,13 @@ Cognito 계정은 만들지 않습니다. `/admin` 비밀번호는 Amplify **시
 pnpm exec ampx sandbox secret set ADMIN_PASSWORD
 ```
 
-배포: Amplify 콘솔 > 해당 브랜치 > **Secret management**에 `ADMIN_PASSWORD` 등록.
+배포: 기존 앱 **호스팅 > 비밀(암호 관리)** 에 `ADMIN_PASSWORD` 등록 후 저장, 해당 브랜치 Redeploy.
 
 그다음 `https://<도메인>/admin`에서 비밀번호만 넣고 들어가면 참석 목록/CSV, 방명록 삭제, 게스트 스냅 다운로드를 쓸 수 있습니다.
 
 ### SPA 새로고침 (`/admin`)
 
-Amplify 호스팅 > **Rewrites and redirects**에 아래를 추가합니다. 없으면 `/admin` 직접 진입·새로고침이 404가 납니다.
-
-- Source: `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>`
-- Target: `/index.html`
-- Type: `200 (Rewrite)`
+기존 앱에 `<*>` → `/index.html` (`404-200` 또는 `200`) rewrite가 있으면 `/admin` 직접 진입·새로고침에 충분합니다. 정규식 rewrite를 하나 더 넣지 마세요.
 
 ### 커스텀 도메인 (선택)
 
