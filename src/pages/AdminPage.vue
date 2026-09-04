@@ -11,7 +11,6 @@ type Tab = 'rsvp' | 'guestbook' | 'snaps'
 const available = isAmplifyConfigured()
 const checking = ref(true)
 const signedIn = ref(false)
-const email = ref('')
 const password = ref('')
 const loginError = ref('')
 const loggingIn = ref(false)
@@ -43,12 +42,12 @@ async function onLogin() {
   loginError.value = ''
   loggingIn.value = true
   try {
-    await loginAdmin(email.value, password.value)
+    await loginAdmin(password.value)
     signedIn.value = true
     password.value = ''
     await loadTab()
   } catch (err) {
-    loginError.value = err instanceof Error ? err.message : '로그인하지 못했습니다'
+    loginError.value = err instanceof Error ? err.message : '들어가지 못했습니다'
   } finally {
     loggingIn.value = false
   }
@@ -168,15 +167,6 @@ const tabBtn = (active: boolean) =>
 
       <form v-else-if="!signedIn" class="mt-8 max-w-sm space-y-4" @submit.prevent="onLogin">
         <label class="block">
-          <span class="mb-2 block text-xs text-stone-400">이메일</span>
-          <input
-            v-model="email"
-            type="email"
-            autocomplete="username"
-            class="w-full rounded-xl bg-white px-4 py-3 text-sm text-stone-700 ring-1 ring-stone-200 outline-none focus:ring-blush"
-          />
-        </label>
-        <label class="block">
           <span class="mb-2 block text-xs text-stone-400">비밀번호</span>
           <input
             v-model="password"
@@ -189,9 +179,9 @@ const tabBtn = (active: boolean) =>
         <button
           type="submit"
           class="w-full rounded-xl bg-blush py-3 text-sm font-semibold text-white disabled:opacity-60"
-          :disabled="loggingIn"
+          :disabled="loggingIn || !password"
         >
-          {{ loggingIn ? '로그인 중...' : '로그인' }}
+          {{ loggingIn ? '확인 중...' : '들어가기' }}
         </button>
       </form>
 

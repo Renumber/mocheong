@@ -62,13 +62,13 @@ cp .env.example .env
    - `VITE_SITE_URL`을 실제 Amplify 도메인으로 수정 후 재배포
    - 카카오 개발자 콘솔 플랫폼에 Amplify 도메인 등록
 
-### 관리자 계정 (Cognito)
+### 관리자 계정
 
-Gen 2는 관리자 유저를 코드로 만들지 않습니다. 첫 배포(또는 sandbox) 뒤 **Cognito 사용자 풀**에서 이메일 유저 1명을 만듭니다.
+`/admin`은 비밀번호만 입력합니다. 이메일은 화면에 안 나옵니다.
 
-1. Amplify 콘솔 > 해당 브랜치 > **Authentication** 또는 AWS Cognito 콘솔 > User pools
-2. 사용자 생성 (이메일 = 로그인 ID, 임시 비밀번호)
-3. `https://<도메인>/admin`에서 로그인
+1. Amplify 콘솔 > Authentication 또는 Cognito 사용자 풀에서 유저 1명 생성 (이메일 + 비밀번호, 상태를 Confirmed로)
+2. 그 이메일을 `.env` / Amplify 환경변수 `VITE_ADMIN_EMAIL`에 넣기
+3. `https://<도메인>/admin`에서 비밀번호만 넣고 들어가기
 4. 참석 목록/CSV, 방명록 삭제, 게스트 스냅 다운로드
 
 ### SPA 새로고침 (`/admin`)
