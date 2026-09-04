@@ -11,6 +11,10 @@
     "sandbox": "ampx sandbox"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1126.0",
+    "@aws-sdk/client-s3": "^3.1126.0",
+    "@aws-sdk/lib-dynamodb": "^3.1126.0",
+    "@aws-sdk/s3-request-presigner": "^3.1126.0",
     "@tailwindcss/vite": "^4.3.0",
     "aws-amplify": "^6.20.0",
     "tailwindcss": "^4.3.0",

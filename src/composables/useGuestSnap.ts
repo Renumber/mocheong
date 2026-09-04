@@ -1,5 +1,7 @@
-import { downloadData, list, uploadData } from 'aws-amplify/storage'
+import { uploadData } from 'aws-amplify/storage'
+import { adminPassword } from './useAdminAuth'
 import { ensureGuestSession, isAmplifyConfigured } from '../amplify'
+import { dataClient } from './useDataClient'
 
 export type SnapItem = {
   path: string
@@ -10,6 +12,12 @@ export type SnapItem = {
 function fileNameOf(path: string) {
   const parts = path.split('/')
   return parts[parts.length - 1] || path
+}
+
+function firstError(errors: { message?: string }[] | undefined, fallback: string) {
+  const message = errors?.[0]?.message || fallback
+  if (/unauthor/i.test(message)) return '비밀번호가 올바르지 않습니다'
+  return message
 }
 
 export async function uploadSnap(blob: Blob) {
@@ -25,25 +33,37 @@ export async function uploadSnap(blob: Blob) {
 }
 
 export async function listSnaps(): Promise<SnapItem[]> {
-  if (!isAmplifyConfigured()) throw new Error('관리자 기능을 사용할 수 없습니다')
-  const result = await list({
-    path: 'snaps/',
-    options: { listAll: true },
-  })
-  return (result.items ?? [])
-    .filter((item) => Boolean(item.path) && !item.path.endsWith('/'))
+  const client = dataClient()
+  if (!client) throw new Error('관리자 기능을 사용할 수 없습니다')
+  const password = adminPassword()
+  if (!password) throw new Error('비밀번호가 올바르지 않습니다')
+
+  await ensureGuestSession()
+  const { data, errors } = await client.queries.adminListSnaps({ password })
+  if (errors?.length) throw new Error(firstError(errors, '사진을 불러오지 못했습니다'))
+
+  return (data ?? [])
+    .filter((item): item is NonNullable<typeof item> => Boolean(item?.path))
     .map((item) => ({
       path: item.path,
-      size: item.size,
-      lastModified: item.lastModified,
+      size: item.size ?? undefined,
+      lastModified: item.lastModified ? new Date(item.lastModified) : undefined,
     }))
-    .sort((a, b) => (b.lastModified?.getTime() ?? 0) - (a.lastModified?.getTime() ?? 0))
 }
 
 export async function downloadSnap(path: string) {
-  if (!isAmplifyConfigured()) throw new Error('관리자 기능을 사용할 수 없습니다')
-  const { body } = await downloadData({ path }).result
-  const blob = await body.blob()
+  const client = dataClient()
+  if (!client) throw new Error('관리자 기능을 사용할 수 없습니다')
+  const password = adminPassword()
+  if (!password) throw new Error('비밀번호가 올바르지 않습니다')
+
+  await ensureGuestSession()
+  const { data, errors } = await client.queries.adminGetSnapUrl({ password, path })
+  if (errors?.length || !data) throw new Error(firstError(errors, '내려받지 못했습니다'))
+
+  const response = await fetch(data)
+  if (!response.ok) throw new Error('내려받지 못했습니다')
+  const blob = await response.blob()
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url

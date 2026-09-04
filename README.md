@@ -22,6 +22,7 @@ pnpm dev
 참석·방명록·스냅을 로컬에서 쓰려면 Amplify 백엔드가 필요합니다.
 
 ```bash
+pnpm exec ampx sandbox secret set ADMIN_PASSWORD
 pnpm sandbox
 ```
 
@@ -62,14 +63,21 @@ cp .env.example .env
    - `VITE_SITE_URL`을 실제 Amplify 도메인으로 수정 후 재배포
    - 카카오 개발자 콘솔 플랫폼에 Amplify 도메인 등록
 
-### 관리자 계정
+### 관리자 비밀번호
 
-`/admin`은 비밀번호만 입력합니다. 이메일은 화면에 안 나옵니다.
+Cognito 계정은 만들지 않습니다. `/admin` 비밀번호는 Amplify **시크릿** `ADMIN_PASSWORD`입니다. 프론트 번들에 안 들어갑니다.
 
-1. Amplify 콘솔 > Authentication 또는 Cognito 사용자 풀에서 유저 1명 생성 (이메일 + 비밀번호, 상태를 Confirmed로)
-2. 그 이메일을 `.env` / Amplify 환경변수 `VITE_ADMIN_EMAIL`에 넣기
-3. `https://<도메인>/admin`에서 비밀번호만 넣고 들어가기
-4. 참석 목록/CSV, 방명록 삭제, 게스트 스냅 다운로드
+게스트가 로그인 없이 글을 남기고 사진을 올리려면 Amplify Identity Pool이 필요합니다. 콘솔에서 유저를 만들 일은 없습니다.
+
+로컬:
+
+```bash
+pnpm exec ampx sandbox secret set ADMIN_PASSWORD
+```
+
+배포: Amplify 콘솔 > 해당 브랜치 > **Secret management**에 `ADMIN_PASSWORD` 등록.
+
+그다음 `https://<도메인>/admin`에서 비밀번호만 넣고 들어가면 참석 목록/CSV, 방명록 삭제, 게스트 스냅 다운로드를 쓸 수 있습니다.
 
 ### SPA 새로고침 (`/admin`)
 

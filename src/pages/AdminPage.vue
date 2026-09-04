@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { isAmplifyConfigured } from '../amplify'
-import { currentAdmin, loginAdmin, logoutAdmin } from '../composables/useAdminAuth'
+import { isAdminUnlocked, loginAdmin, logoutAdmin } from '../composables/useAdminAuth'
 import { deleteGuestbook, listGuestbook, type GuestbookEntry } from '../composables/useGuestbook'
 import { downloadAllSnaps, downloadSnap, listSnaps, type SnapItem } from '../composables/useGuestSnap'
 import { deleteRsvp, listRsvps, type RsvpRecord } from '../composables/useRsvp'
@@ -33,7 +33,7 @@ onMounted(async () => {
     checking.value = false
     return
   }
-  signedIn.value = Boolean(await currentAdmin())
+  signedIn.value = isAdminUnlocked()
   checking.value = false
   if (signedIn.value) await loadTab()
 })
@@ -54,7 +54,7 @@ async function onLogin() {
 }
 
 async function onLogout() {
-  await logoutAdmin()
+  logoutAdmin()
   signedIn.value = false
 }
 
@@ -63,7 +63,7 @@ async function loadTab() {
   actionError.value = ''
   try {
     if (tab.value === 'rsvp') rsvps.value = await listRsvps()
-    if (tab.value === 'guestbook') guestbook.value = await listGuestbook('userPool')
+    if (tab.value === 'guestbook') guestbook.value = await listGuestbook()
     if (tab.value === 'snaps') snaps.value = await listSnaps()
   } catch (err) {
     actionError.value = err instanceof Error ? err.message : '불러오지 못했습니다'

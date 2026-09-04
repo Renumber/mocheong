@@ -1,3 +1,4 @@
+import { adminPassword } from './useAdminAuth'
 import { ensureGuestSession } from '../amplify'
 import { dataClient } from './useDataClient'
 
@@ -9,21 +10,20 @@ export type GuestbookEntry = {
 }
 
 function firstError(errors: { message?: string }[] | undefined, fallback: string) {
-  return errors?.[0]?.message || fallback
+  const message = errors?.[0]?.message || fallback
+  if (/unauthor/i.test(message)) return '비밀번호가 올바르지 않습니다'
+  return message
 }
 
-export async function listGuestbook(
-  authMode: 'identityPool' | 'userPool' = 'identityPool',
-): Promise<GuestbookEntry[]> {
+export async function listGuestbook(): Promise<GuestbookEntry[]> {
   const client = dataClient()
   if (!client) return []
 
-  if (authMode === 'identityPool') await ensureGuestSession()
+  await ensureGuestSession()
   const items: GuestbookEntry[] = []
   let nextToken: string | null | undefined
   do {
     const result = await client.models.Guestbook.list({
-      authMode,
       limit: 200,
       nextToken,
     })
@@ -56,6 +56,10 @@ export async function createGuestbook(name: string, message: string) {
 export async function deleteGuestbook(id: string) {
   const client = dataClient()
   if (!client) throw new Error('관리자 기능을 사용할 수 없습니다')
-  const { errors } = await client.models.Guestbook.delete({ id }, { authMode: 'userPool' })
+  const password = adminPassword()
+  if (!password) throw new Error('비밀번호가 올바르지 않습니다')
+
+  await ensureGuestSession()
+  const { errors } = await client.mutations.adminDeleteGuestbook({ password, id })
   if (errors?.length) throw new Error(firstError(errors, '삭제하지 못했습니다'))
 }
