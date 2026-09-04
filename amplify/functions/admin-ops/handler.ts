@@ -52,7 +52,7 @@ export const handler = async (event: Event) => {
   const field = fieldNameOf(event)
   const rsvpTable = process.env.RSVP_TABLE_NAME
   const guestbookTable = process.env.GUESTBOOK_TABLE_NAME
-  const bucket = env.mocheongSnaps_BUCKET_NAME
+  const bucket = env.MOCHEONG_SNAPS_BUCKET_NAME
 
   if (field === 'adminUnlock') return true
 

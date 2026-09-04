@@ -1,3 +1,4 @@
+import { Function } from 'aws-cdk-lib/aws-lambda'
 import { defineBackend } from '@aws-amplify/backend'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
@@ -17,5 +18,7 @@ const guestbookTable = backend.data.resources.tables['Guestbook']
 
 rsvpTable.grantReadWriteData(lambda)
 guestbookTable.grantReadWriteData(lambda)
-lambda.addEnvironment('RSVP_TABLE_NAME', rsvpTable.tableName)
-lambda.addEnvironment('GUESTBOOK_TABLE_NAME', guestbookTable.tableName)
+
+const fn = lambda as Function
+fn.addEnvironment('RSVP_TABLE_NAME', rsvpTable.tableName)
+fn.addEnvironment('GUESTBOOK_TABLE_NAME', guestbookTable.tableName)
