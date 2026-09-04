@@ -8,13 +8,24 @@ Vue 3 + Vite + TypeScript + Tailwind CSS 기반 모바일 청첩장.
 - **카카오 지도**: 예식장 위치 마커 + 카카오맵/네이버지도/티맵 길찾기 버튼
 - **실시간 카운트다운**: 예식까지 일/시/분/초 실시간 표시 + 달력 위젯
 - 인사말, 갤러리(전체화면 스와이프 뷰어), 계좌번호 복사, 전화/문자 연락처
+- **참석 여부**: 이름/측/참석/인원 폼. 목록은 `/admin`에서만 확인
+- **방명록**: 청첩장에 메시지 공개
+- **게스트 스냅**: 사진은 S3에만 저장. 청첩장에는 갤러리로 보여 주지 않음
 
 ## 시작하기
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
+
+참석·방명록·스냅을 로컬에서 쓰려면 Amplify 백엔드가 필요합니다.
+
+```bash
+pnpm sandbox
+```
+
+sandbox가 `amplify_outputs.json`을 만들면 Vite가 그걸 읽습니다. 파일이 없으면 폼은 보이고 제출만 막힙니다.
 
 ## 개인정보 설정 (.env)
 
@@ -38,16 +49,35 @@ cp .env.example .env
    - 배포 후: Amplify 도메인 (예: `https://main.xxxx.amplifyapp.com`)
 4. **제품 설정 > 카카오맵** 활성화
 
-## AWS Amplify 배포
+## AWS Amplify 배포 (Gen 2 fullstack)
+
+호스팅만 있는 기존 앱이면, 콘솔에서 **Gen 2 백엔드**를 이 저장소의 `amplify/`에 연결해야 `amplify.yml` 백엔드 단계가 통과합니다. 연결 전에 배포하면 `ampx pipeline-deploy`가 실패합니다.
 
 1. 이 저장소를 GitHub에 push
-2. [Amplify 콘솔](https://console.aws.amazon.com/amplify) > **새 앱 호스팅** > GitHub 저장소 연결
-3. 빌드 설정은 저장소의 `amplify.yml`이 자동 적용됨
+2. [Amplify 콘솔](https://console.aws.amazon.com/amplify) > **새 앱** > GitHub 저장소 연결 (Gen 2 fullstack)
+3. 빌드 설정은 저장소의 `amplify.yml`이 적용됨 (백엔드 배포 후 프론트 빌드)
 4. **환경 변수**에 `.env`의 모든 `VITE_*` 변수를 등록
    - `.env`는 git에 없으므로, Amplify 콘솔 환경변수가 빌드 시 주입됩니다 (`amplify.yml` 참고)
 5. 배포 완료 후:
    - `VITE_SITE_URL`을 실제 Amplify 도메인으로 수정 후 재배포
    - 카카오 개발자 콘솔 플랫폼에 Amplify 도메인 등록
+
+### 관리자 계정 (Cognito)
+
+Gen 2는 관리자 유저를 코드로 만들지 않습니다. 첫 배포(또는 sandbox) 뒤 **Cognito 사용자 풀**에서 이메일 유저 1명을 만듭니다.
+
+1. Amplify 콘솔 > 해당 브랜치 > **Authentication** 또는 AWS Cognito 콘솔 > User pools
+2. 사용자 생성 (이메일 = 로그인 ID, 임시 비밀번호)
+3. `https://<도메인>/admin`에서 로그인
+4. 참석 목록/CSV, 방명록 삭제, 게스트 스냅 다운로드
+
+### SPA 새로고침 (`/admin`)
+
+Amplify 호스팅 > **Rewrites and redirects**에 아래를 추가합니다. 없으면 `/admin` 직접 진입·새로고침이 404가 납니다.
+
+- Source: `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>`
+- Target: `/index.html`
+- Type: `200 (Rewrite)`
 
 ### 커스텀 도메인 (선택)
 

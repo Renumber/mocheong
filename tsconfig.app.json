@@ -3,6 +3,10 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["vite/client"],
+    "resolveJsonModule": true,
+    "paths": {
+      "@amplify-outputs": ["./src/amplify-outputs.stub.json"]
+    },
 
     /* Linting */
     "noUnusedLocals": true,
