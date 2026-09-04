@@ -58,12 +58,16 @@ cp .env.example .env
 2. **환경 변수**의 `VITE_*`는 기존 앱 값을 그대로 씁니다. 브랜치 전용이 아니면 다시 넣을 필요 없습니다
 3. **호스팅 > 비밀(암호 관리)** 에 `ADMIN_PASSWORD`를 등록하고 저장합니다. 환경 변수가 아닙니다
    - 가능하면 브랜치를 `모든 브랜치`만이 아니라 이 브랜치 이름으로도 넣습니다
-4. 이 계정에서 Amplify Gen 2 백엔드를 **처음** 배포하는 경우, 서울 리전 CDK 부트스트랩과 Amplify 서비스 역할 권한이 필요합니다
+4. 호스팅만 쓰던 앱이면 **서비스 역할**이 없습니다. 없으면 빌드가 Amplify 내부 계정으로 돌아가고, 로그에 `0248…` 같은 남의 계정 ID가 나옵니다. 그 계정으로 부트스트랩하지 마세요.
+   - Amplify 콘솔 > 앱 설정 > **IAM 역할** > 서비스 역할 **편집**
+   - 역할이 없으면 IAM에서 신뢰 주체 `Amplify - Backend Deployment`로 역할을 만들고(`AdministratorAccess-Amplify` 또는 `AmplifyBackendDeployFullAccess`), 그 역할을 앱에 연결
+5. 그다음 **콘솔 오른쪽 위 본인 계정**(예: `992382414004`)에 CDK 부트스트랩을 한 번 합니다.
    ```bash
-   npx cdk bootstrap aws://<계정ID>/ap-northeast-2
+   aws sts get-caller-identity
+   npx --yes aws-cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/ap-northeast-2
    ```
-   Amplify 앱의 서비스 역할에 `AdministratorAccess-Amplify`가 있고, CodeBuild 역할이 `ssm:GetParameter`로 `/cdk-bootstrap/*`를 읽을 수 있어야 합니다. 이 권한이 없으면 시크릿을 넣어도 백엔드 단계에서 `BootstrapDetectionError`로 실패합니다.
-5. 배포 완료 후:
+   `Account`가 콘솔 오른쪽 위와 같아야 합니다. 다르면 CloudShell 계정이 잘못된 것입니다.
+6. 배포 완료 후:
    - 브랜치 URL을 카카오 개발자 콘솔 Web 플랫폼에 추가
    - `VITE_SITE_URL`은 프로덕션 도메인을 쓸지, 브랜치 URL을 쓸지 선택
 
