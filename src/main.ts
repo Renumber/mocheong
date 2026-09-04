@@ -1,9 +1,13 @@
 import { createApp, type Directive } from 'vue'
 import './style.css'
 import App from './App.vue'
+import { router } from './router'
 import { printConsoleEasterEgg } from './easterEgg'
+import { configureAmplify } from './amplify'
+import outputs from '@amplify-outputs'
 
 printConsoleEasterEgg()
+configureAmplify(outputs)
 
 /** v-reveal: 뷰포트 진입 시 페이드인 */
 const reveal: Directive<HTMLElement> = {
@@ -24,4 +28,4 @@ const reveal: Directive<HTMLElement> = {
   },
 }
 
-createApp(App).directive('reveal', reveal).mount('#app')
+createApp(App).use(router).directive('reveal', reveal).mount('#app')

@@ -8,13 +8,25 @@ Vue 3 + Vite + TypeScript + Tailwind CSS 기반 모바일 청첩장.
 - **카카오 지도**: 예식장 위치 마커 + 카카오맵/네이버지도/티맵 길찾기 버튼
 - **실시간 카운트다운**: 예식까지 일/시/분/초 실시간 표시 + 달력 위젯
 - 인사말, 갤러리(전체화면 스와이프 뷰어), 계좌번호 복사, 전화/문자 연락처
+- **참석 여부**: 이름/측/참석/인원 폼. 목록은 `/admin`에서만 확인
+- **방명록**: 청첩장에 메시지 공개
+- **게스트 스냅**: 사진은 S3에만 저장. 청첩장에는 갤러리로 보여 주지 않음
 
 ## 시작하기
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
+
+참석·방명록·스냅을 로컬에서 쓰려면 Amplify 백엔드가 필요합니다.
+
+```bash
+pnpm exec ampx sandbox secret set ADMIN_PASSWORD
+pnpm sandbox
+```
+
+sandbox가 `amplify_outputs.json`을 만들면 Vite가 그걸 읽습니다. 파일이 없으면 폼은 보이고 제출만 막힙니다.
 
 ## 개인정보 설정 (.env)
 
@@ -38,16 +50,46 @@ cp .env.example .env
    - 배포 후: Amplify 도메인 (예: `https://main.xxxx.amplifyapp.com`)
 4. **제품 설정 > 카카오맵** 활성화
 
-## AWS Amplify 배포
+## AWS Amplify 배포 (Gen 2 fullstack)
 
-1. 이 저장소를 GitHub에 push
-2. [Amplify 콘솔](https://console.aws.amazon.com/amplify) > **새 앱 호스팅** > GitHub 저장소 연결
-3. 빌드 설정은 저장소의 `amplify.yml`이 자동 적용됨
-4. **환경 변수**에 `.env`의 모든 `VITE_*` 변수를 등록
-   - `.env`는 git에 없으므로, Amplify 콘솔 환경변수가 빌드 시 주입됩니다 (`amplify.yml` 참고)
-5. 배포 완료 후:
-   - `VITE_SITE_URL`을 실제 Amplify 도메인으로 수정 후 재배포
-   - 카카오 개발자 콘솔 플랫폼에 Amplify 도메인 등록
+새 Amplify 앱을 만들 필요는 없습니다. 호스팅만 쓰던 **기존 앱에 브랜치를 추가**하면 됩니다. `amplify.yml`이 그 브랜치에서 백엔드(`ampx pipeline-deploy`)를 먼저 돌리고, 이어서 프론트를 빌드합니다. `main`은 머지 전까지 그대로입니다.
+
+1. GitHub에 push한 뒤, 기존 Amplify 앱에서 이 브랜치를 연결
+2. **환경 변수**의 `VITE_*`는 기존 앱 값을 그대로 씁니다. 브랜치 전용이 아니면 다시 넣을 필요 없습니다
+3. **호스팅 > 비밀(암호 관리)** 에 `ADMIN_PASSWORD`를 등록하고 저장합니다. 환경 변수가 아닙니다
+   - 가능하면 브랜치를 `모든 브랜치`만이 아니라 이 브랜치 이름으로도 넣습니다
+4. 호스팅만 쓰던 앱이면 **서비스 역할**이 없습니다. 없으면 빌드가 Amplify 내부 계정으로 돌아가고, 로그에 `0248…` 같은 남의 계정 ID가 나옵니다. 그 계정으로 부트스트랩하지 마세요.
+   - Amplify 콘솔 > 앱 설정 > **IAM 역할** > 서비스 역할 **편집**
+   - 역할이 없으면 IAM에서 신뢰 주체 `Amplify - Backend Deployment`로 역할을 만들고(`AdministratorAccess-Amplify` 또는 `AmplifyBackendDeployFullAccess`), 그 역할을 앱에 연결
+5. 그다음 **콘솔 오른쪽 위 본인 계정**(예: `992382414004`)에 CDK 부트스트랩을 한 번 합니다.
+   ```bash
+   aws sts get-caller-identity
+   npx --yes aws-cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/ap-northeast-2
+   ```
+   `Account`가 콘솔 오른쪽 위와 같아야 합니다. 다르면 CloudShell 계정이 잘못된 것입니다.
+6. 배포 완료 후:
+   - 브랜치 URL을 카카오 개발자 콘솔 Web 플랫폼에 추가
+   - `VITE_SITE_URL`은 프로덕션 도메인을 쓸지, 브랜치 URL을 쓸지 선택
+
+### 관리자 비밀번호
+
+Cognito 계정은 만들지 않습니다. `/admin` 비밀번호는 Amplify **시크릿** `ADMIN_PASSWORD`입니다. 프론트 번들에 안 들어갑니다.
+
+게스트가 로그인 없이 글을 남기고 사진을 올리려면 Amplify Identity Pool이 필요합니다. 콘솔에서 유저를 만들 일은 없습니다.
+
+로컬:
+
+```bash
+pnpm exec ampx sandbox secret set ADMIN_PASSWORD
+```
+
+배포: 기존 앱 **호스팅 > 비밀(암호 관리)** 에 `ADMIN_PASSWORD` 등록 후 저장, 해당 브랜치 Redeploy.
+
+그다음 `https://<도메인>/admin`에서 비밀번호만 넣고 들어가면 참석 목록/CSV, 방명록 삭제, 게스트 스냅 다운로드를 쓸 수 있습니다.
+
+### SPA 새로고침 (`/admin`)
+
+기존 앱에 `<*>` → `/index.html` (`404-200` 또는 `200`) rewrite가 있으면 `/admin` 직접 진입·새로고침에 충분합니다. 정규식 rewrite를 하나 더 넣지 마세요.
 
 ### 커스텀 도메인 (선택)
 
