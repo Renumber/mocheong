@@ -23,8 +23,8 @@ import { wedding } from '../config/wedding'
       <AccountSection v-reveal />
       <ContactSection v-reveal />
       <SeatSideSection v-reveal />
-      <ShareSection v-reveal />
       <GuestSnapSection v-reveal />
+      <ShareSection v-reveal />
     </main>
     <footer class="py-10 text-center text-xs text-stone-400">
       {{ wedding.groom.name }} ♥ {{ wedding.bride.name }}
