@@ -10,6 +10,10 @@ frontend:
         # Amplify 콘솔 환경변수(VITE_*)를 빌드 시 .env로 내려받아 Vite가 읽도록 함
         - env | grep -e '^VITE_' > .env.production || true
         - pnpm run build
+        # /guest-snap, /guest-snap/album 직접 진입 시 index.html 제공
+        - mkdir -p dist/guest-snap/album
+        - cp dist/index.html dist/guest-snap/index.html
+        - cp dist/index.html dist/guest-snap/album/index.html
   artifacts:
     baseDirectory: dist
     files:

@@ -25,3 +25,7 @@ dist-ssr
 
 # env files
 .env
+.env.production
+
+# Lambda zip
+functions/guest-snap/function.zip
