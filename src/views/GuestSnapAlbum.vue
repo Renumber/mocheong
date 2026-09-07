@@ -56,14 +56,14 @@ onMounted(() => {
       v-if="!configured"
       class="rounded-lg bg-gray-100 px-6 py-10 text-center"
     >
-      <p class="font-serif text-sm text-stone-500">게스트 스냅 API가 아직 연결되지 않았어요.</p>
+      <p class="font-serif text-sm text-stone-500">준비 중입니다.</p>
     </div>
 
     <div
       v-else-if="loading"
       class="rounded-lg bg-gray-100 px-6 py-10 text-center"
     >
-      <p class="font-serif text-sm text-stone-500">사진을 불러오는 중…</p>
+      <p class="font-serif text-sm text-stone-500">사진을 불러오는 중...</p>
     </div>
 
     <div
@@ -73,7 +73,7 @@ onMounted(() => {
       <p class="font-serif text-sm text-stone-500">{{ error }}</p>
       <button
         type="button"
-        class="mt-4 rounded-xl bg-blush px-5 py-2 text-sm font-medium text-white"
+        class="mt-6 w-full rounded-xl bg-white py-4 text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-200 transition-colors hover:bg-gray-100"
         @click="load(true)"
       >
         다시 시도
@@ -104,11 +104,11 @@ onMounted(() => {
       <button
         v-if="cursor"
         type="button"
-        class="mt-6 w-full rounded-xl bg-white py-3 text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-200 disabled:opacity-50"
+        class="mt-6 w-full rounded-xl bg-white py-4 text-sm font-medium text-stone-700 shadow-sm ring-1 ring-stone-200 transition-colors hover:bg-gray-100 disabled:opacity-50"
         :disabled="loadingMore"
         @click="load(false)"
       >
-        {{ loadingMore ? '불러오는 중…' : '더 보기' }}
+        {{ loadingMore ? '불러오는 중...' : '더 보기' }}
       </button>
     </template>
 

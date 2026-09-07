@@ -8,6 +8,7 @@ import AccountSection from '../components/AccountSection.vue'
 import ContactSection from '../components/ContactSection.vue'
 import SeatSideSection from '../components/SeatSideSection.vue'
 import ShareSection from '../components/ShareSection.vue'
+import GuestSnapSection from '../components/GuestSnapSection.vue'
 import { wedding } from '../config/wedding'
 </script>
 
@@ -23,6 +24,7 @@ import { wedding } from '../config/wedding'
       <ContactSection v-reveal />
       <SeatSideSection v-reveal />
       <ShareSection v-reveal />
+      <GuestSnapSection v-reveal />
     </main>
     <footer class="py-10 text-center text-xs text-stone-400">
       {{ wedding.groom.name }} ♥ {{ wedding.bride.name }}

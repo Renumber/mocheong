@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
-import GuestSnapLayout from '../components/GuestSnapLayout.vue'
+import { computed, onUnmounted, ref } from 'vue'
 import {
   guestSnapMaxBytes,
   isGuestSnapConfigured,
@@ -25,8 +24,10 @@ const items = ref<UploadItem[]>([])
 const busy = ref(false)
 const CONCURRENCY = 3
 const MAX_BYTES = guestSnapMaxBytes()
-
 const HEIC_TYPES = new Set(['image/heic', 'image/heif'])
+
+const doneCount = computed(() => items.value.filter((it) => it.status === 'done').length)
+const errorCount = computed(() => items.value.filter((it) => it.status === 'error').length)
 
 function inferType(file: File): string {
   if (file.type) return file.type.toLowerCase()
@@ -71,6 +72,7 @@ async function runPool<T>(tasks: T[], limit: number, worker: (task: T) => Promis
 }
 
 function openPicker() {
+  if (!configured || busy.value) return
   inputEl.value?.click()
 }
 
@@ -131,75 +133,68 @@ async function onSelect(e: Event) {
   }
 }
 
-const doneCount = () => items.value.filter((it) => it.status === 'done').length
-const errorCount = () => items.value.filter((it) => it.status === 'error').length
-
 onUnmounted(() => {
   for (const item of items.value) URL.revokeObjectURL(item.previewUrl)
 })
 </script>
 
 <template>
-  <GuestSnapLayout>
-    <template #title>사진을 남겨주세요</template>
-    <template #subtitle>
-      예식에서 찍은 사진을 올려주시면 저희가 소중히 모아둘게요.
-    </template>
+  <section id="guest-snap" class="px-8 py-16 text-center">
+    <p class="font-serif text-xs tracking-[0.35em] text-blush uppercase">Guest Snap</p>
+    <h2 class="mt-3 font-serif text-xl text-stone-800">사진을 남겨주세요</h2>
+    <p class="mt-4 text-sm leading-6 text-stone-500">
+      예식에서 찍은 사진을 올려주시면<br />저희가 소중히 모아둘게요.
+    </p>
 
-    <div
-      v-if="!configured"
-      class="rounded-lg bg-gray-100 px-6 py-10 text-center"
-    >
-      <p class="font-serif text-sm text-stone-500">게스트 스냅 API가 아직 연결되지 않았어요.</p>
-    </div>
+    <input
+      ref="inputEl"
+      type="file"
+      accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*"
+      multiple
+      class="hidden"
+      @change="onSelect"
+    />
 
-    <template v-else>
-      <input
-        ref="inputEl"
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*"
-        multiple
-        class="hidden"
-        @change="onSelect"
-      />
-
+    <div class="mt-8 space-y-3">
       <button
         type="button"
-        class="flex w-full items-center justify-center gap-2 rounded-xl bg-blush py-4 text-sm font-semibold text-white shadow-sm transition-opacity disabled:opacity-50"
-        :disabled="busy"
+        class="w-full rounded-xl bg-blush py-4 text-sm font-semibold text-white shadow-sm transition-opacity disabled:opacity-60"
+        :disabled="!configured || busy"
         @click="openPicker"
       >
-        {{ busy ? '올리는 중…' : '사진 선택하기' }}
+        {{ busy ? '올리는 중...' : '사진 선택하기' }}
       </button>
-      <p class="mt-3 text-center text-xs text-stone-400">JPEG, PNG, WEBP, HEIC · 장당 15MB까지</p>
-
-      <p v-if="items.length" class="mt-6 text-center text-xs text-stone-500">
-        완료 {{ doneCount() }}장
-        <span v-if="errorCount()"> · 실패 {{ errorCount() }}장</span>
+      <p class="text-xs text-stone-400">
+        {{ configured ? 'JPEG, PNG, WEBP, HEIC · 장당 15MB까지' : '준비 중입니다.' }}
       </p>
+    </div>
 
-      <ul v-if="items.length" class="mt-4 grid grid-cols-3 gap-1.5">
-        <li
-          v-for="item in items"
-          :key="item.id"
-          class="relative aspect-square overflow-hidden rounded-md bg-gray-100"
+    <p v-if="items.length" class="mt-6 text-xs text-stone-500">
+      완료 {{ doneCount }}장
+      <span v-if="errorCount"> · 실패 {{ errorCount }}장</span>
+    </p>
+
+    <ul v-if="items.length" class="mt-4 grid grid-cols-3 gap-1.5">
+      <li
+        v-for="item in items"
+        :key="item.id"
+        class="relative aspect-square overflow-hidden rounded-md bg-gray-100"
+      >
+        <img :src="item.previewUrl" :alt="item.name" class="h-full w-full object-cover" />
+        <div
+          v-if="item.status !== 'done'"
+          class="absolute inset-0 flex flex-col items-center justify-center bg-black/50 px-1 text-center text-[11px] text-white"
         >
-          <img :src="item.previewUrl" :alt="item.name" class="h-full w-full object-cover" />
-          <div
-            v-if="item.status !== 'done'"
-            class="absolute inset-0 flex flex-col items-center justify-center bg-black/50 px-1 text-center text-[11px] text-white"
-          >
-            <template v-if="item.status === 'error'">
-              <span>실패</span>
-              <span class="mt-0.5 line-clamp-2 text-white/80">{{ item.error }}</span>
-            </template>
-            <template v-else>
-              <span>{{ item.status === 'converting' ? '변환 중' : '업로드 중' }}</span>
-              <span class="mt-1 tabular-nums">{{ item.progress }}%</span>
-            </template>
-          </div>
-        </li>
-      </ul>
-    </template>
-  </GuestSnapLayout>
+          <template v-if="item.status === 'error'">
+            <span>실패</span>
+            <span class="mt-0.5 line-clamp-2 text-white/80">{{ item.error }}</span>
+          </template>
+          <template v-else>
+            <span>{{ item.status === 'converting' ? '변환 중' : '업로드 중' }}</span>
+            <span class="mt-1 tabular-nums">{{ item.progress }}%</span>
+          </template>
+        </div>
+      </li>
+    </ul>
+  </section>
 </template>
