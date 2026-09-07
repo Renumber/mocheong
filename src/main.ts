@@ -1,6 +1,7 @@
 import { createApp, type Directive } from 'vue'
 import './style.css'
 import App from './App.vue'
+import { router } from './router'
 import { printConsoleEasterEgg } from './easterEgg'
 
 printConsoleEasterEgg()
@@ -24,4 +25,4 @@ const reveal: Directive<HTMLElement> = {
   },
 }
 
-createApp(App).directive('reveal', reveal).mount('#app')
+createApp(App).use(router).directive('reveal', reveal).mount('#app')
